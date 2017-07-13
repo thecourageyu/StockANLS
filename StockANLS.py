@@ -22,8 +22,9 @@ class StockData():
 symbol = "2317"
 filename = inpath + "/" + str(symbol) + ".csv"
 c = pd.read_table(filename, sep=",", header=None)
-c['1']
-c.columns = ["A", "b"]
-pd.appl
+colname = ["date", "shares", "price", "open", "high", "low", "close", "diff", "num"]
+c.columns = colname
+c.date[1]
+
 a = StockData("2317")
 b = a.readdata()
