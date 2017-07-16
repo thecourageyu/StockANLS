@@ -1,0 +1,4 @@
+# settings
+INPUT = E:/LinuxHub/data
+OUTPUT = OUTPUT
+#symbol = 3231
