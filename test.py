@@ -80,7 +80,8 @@ plt.grid(True)
 
 #dsaf
 
-
+import matplotlib.pyplot as plt
+plt.style.use("ggplot")
 from matplotlib.pylab import date2num
 import datetime
 
@@ -110,3 +111,38 @@ plt.xlabel("时间")
 plt.ylabel("股价（元）")
 mpf.candlestick_ohlc(ax, data_list, width=1.5, colorup='r', colordown='green')
 plt.grid()
+
+
+plt.figure(num=2)
+#plt.subplots_adjust(bottom=0.6, right=0.5, top=0.9)
+#plt.style.use("")
+ax1 = plt.subplot2grid((4,1),(0,0),rowspan=3,colspan=1)
+
+
+ax = plt.gca()
+ax.xaxis_date()
+ax.xaxis.set_ticks_position("top")
+
+mpf.candlestick_ohlc(ax, data_list, width=1.5, colorup='r', colordown='green')
+ax2 = plt.subplot2grid((4,1),(1,0),rowspan=3,colspan=3)
+
+l1, = plt.plot(x,y,linewidth=2,label=r"$y=x^2+5$")
+plt.legend(handles=[l1,],labels=[r"y",],loc="best")
+#plt.xlabel(r"$x$")
+#plt.ylabel(r"$f(x)$")
+#ax2.set_xlabel(r"$x$")
+#ax2.set_ylabel(r"$f(x)$")
+ax = plt.gca()
+ax.spines["top"].set_color("none")
+ax.spines["right"].set_color("none")
+ax.xaxis.set_ticks_position("bottom")
+ax.spines["bottom"].set_position(("axes",0.5)) # outward
+ax.yaxis.set_ticks_position("left")
+ax.spines["left"].set_position(("data",0))
+
+ax3 = plt.subplot2grid((4,4),(1,3),rowspan=3,colspan=1)
+plt.plot(y)
+ax = plt.gca()
+ax.yaxis.set_ticks_position("right")
+
+plt.show()
