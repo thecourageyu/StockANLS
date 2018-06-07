@@ -15,9 +15,11 @@ setup(
         "VisualizedPriceInfo",
     ],
     install_requires=[
+        "lxml",
         "matplotlib",
         "numpy",
         "pandas",
+        "requests",
     ],
     #entry_points="""
     #[console_scripts]

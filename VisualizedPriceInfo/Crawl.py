@@ -5,21 +5,46 @@
 # http://www.twse.com.tw/exchangeReport/MI_INDEX?response=html&date=20170524&type=ALLBUT0999
 
 
+import argparse
+import csv
+import logging
 import os
 import re
-import sys
-import csv
-import time
-import string
-import logging
 import requests
-import argparse
+import sys
+import string
+import time
+import multiprocessing as mp
 from datetime import datetime, timedelta
-
 from os import mkdir
 from os.path import isdir
 
 FOLDER = 'data'
+LOG = "LOG"
+
+if not os.path.isdir(LOG):
+    os.makedirs(LOG)
+
+logging.basicConfig(filename='log/crawl-error.log',
+                    level=logging.ERROR,
+                    format='%(asctime)s\t[%(levelname)s]\t%(message)s',
+                    datefmt='%Y/%m/%d %H:%M:%S')
+
+if mpWorks == threads or dateObj == last_day:
+    DateTuple = (dateObj.year, dateObj.month, dateObj.day)
+    Worker = mp.Process(target=crawler.get_data, args=(DateTuple,))
+
+    Worker.start()
+    mpWorks = mpWorks + 1
+    mpTasks.append(Worker)
+    # for tmpWorker in mpTasks:
+    #    tmpWorker.start()
+
+    for tmpWorker in mpTasks:
+        tmpWorker.join()
+
+    mpTasks = []
+    mpWorks = 0
 
 def string_to_time(string):
     year, month, day = string.split('/')
@@ -56,7 +81,7 @@ def rmDuplicates():
             file.writelines(rows)
 
 class Crawler():
-    def __init__(self, prefix="data"):
+    def __init__(self, prefix=FOLDER):
         ''' Make directory if not exist when initialize '''
         if not isdir(prefix):
             mkdir(prefix)
@@ -88,13 +113,14 @@ class Crawler():
 
         # Get json data
         page = requests.get(url, params=query_params)
-
+       # print(page)
+        print("try", page.ok)
         if not page.ok:
             logging.error("Can not get TSE data at {}".format(date_str))
             return
 
         content = page.json()
-
+        print("c1: ", content)
         # For compatible with original data
         date_str_mingguo = '{0}/{1:02d}/{2:02d}'.format(date_tuple[0] - 1911, date_tuple[1], date_tuple[2])
 
@@ -120,12 +146,14 @@ class Crawler():
         url = 'http://www.tpex.org.tw/web/stock/aftertrading/daily_close_quotes/stk_quote_result.php?l=zh-tw&d={}&_={}'.format(date_str, ttime)
         page = requests.get(url)
 
+        print("try2", page.ok)
+        #print(page)
         if not page.ok:
             logging.error("Can not get OTC data at {}".format(date_str))
             return
 
         result = page.json()
-
+        print("r2: ", result)
         if result['reportDate'] != date_str:
             logging.error("Get error date OTC data at {}".format(date_str))
             return
@@ -151,10 +179,39 @@ class Crawler():
         self._get_tse_data(date_tuple)
         self._get_otc_data(date_tuple)
 
+def _getThreads():
+    """ Returns the number of available threads on a posix/win based system """
+    if sys.platform == 'win32':
+        return (int)(os.environ['NUMBER_OF_PROCESSORS'])
+    else:
+        return (int)(os.popen('grep -c cores /proc/cpuinfo').read())
+
+
+def get_tsec_data(sdate, edate):
+    threads = int(_getThreads() * 0.9)
+    sdate = str(sdate)
+    edate = str(edate)
+    first_day = datetime(int(sdate[0:4]), int(sdate[4:6]), int(sdate[6:]))
+    last_day = datetime(int(edate[0:4]), int(edate[4:6]), int(edate[6:]))
+    crawler = Crawler()
+    dateObj = first_day
+    mpTasks = []
+    mpWorks = 0
+    while dateObj <= last_day:
+        try:
+            crawler.get_data((dateObj.year, dateObj.month, dateObj.day))
+        except:
+            #logging.error('Crawl raise error {}'.format(dateobj))
+            print('Crawl raise error {}'.format(dateObj))
+
+        dateObj = dateObj + timedelta(days=1)
+
+
+
 def main():
     # Set logging
-    if not os.path.isdir('log'):
-        os.makedirs('log')
+    if not os.path.isdir(LOG):
+        os.makedirs(LOG)
     logging.basicConfig(filename='log/crawl-error.log',
         level=logging.ERROR,
         format='%(asctime)s\t[%(levelname)s]\t%(message)s',
